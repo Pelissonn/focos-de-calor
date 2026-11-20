@@ -1,0 +1,1154 @@
+{
+ "modo": "focos",
+ "gerado_em": "2026-11-20 10:19",
+ "banco": "area_queimada",
+ "tabela": "firms_tratado",
+ "total": 18541612,
+ "intervalo": {
+  "min": "2025-10-28",
+  "max": "2026-10-29"
+ },
+ "lacunas": [],
+ "arquivos": [
+  "focos_2025_1.parquet",
+  "focos_2026_1.parquet",
+  "focos_2026_2.parquet",
+  "focos_2026_3.parquet"
+ ],
+ "combos": [
+  [
+   1,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   0,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   2,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   2,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   3,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   0,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   4,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   0,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   5,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   0,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   6,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   0,
+   "Alta (20–100 MW)"
+  ],
+  [
+   7,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   2,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   8,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   0,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   9,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   2,
+   "Alta (20–100 MW)"
+  ],
+  [
+   10,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   2,
+   "Alta (20–100 MW)"
+  ],
+  [
+   11,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   3,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   12,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   2,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   13,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   3,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   14,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   2,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   15,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   0,
+   "Alta (20–100 MW)"
+  ],
+  [
+   16,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   0,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   17,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   2,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   18,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   19,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   20,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   0,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   21,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   0,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   22,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   0,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   23,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   0,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   24,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   25,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   2,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   26,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   0,
+   "Alta (20–100 MW)"
+  ],
+  [
+   27,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   0,
+   "Alta (20–100 MW)"
+  ],
+  [
+   28,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   3,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   29,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   0,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   30,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   0,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   31,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   0,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   32,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   3,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   33,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   0,
+   "Alta (20–100 MW)"
+  ],
+  [
+   34,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   0,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   35,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   0,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   36,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   0,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   37,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   3,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   38,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   3,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   39,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   2,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   40,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   3,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   41,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   3,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   42,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   2,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   43,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   2,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   44,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   2,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   45,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   2,
+   "Alta (20–100 MW)"
+  ],
+  [
+   46,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   47,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   48,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   49,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   2,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   50,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   2,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   51,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   3,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   52,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   2,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   53,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   2,
+   "Alta (20–100 MW)"
+  ],
+  [
+   54,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   3,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   55,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   2,
+   "Alta (20–100 MW)"
+  ],
+  [
+   56,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   3,
+   "Alta (20–100 MW)"
+  ],
+  [
+   57,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   58,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   0,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   59,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   0,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   60,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   0,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   61,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   3,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   62,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   3,
+   "Alta (20–100 MW)"
+  ],
+  [
+   63,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   64,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   65,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   66,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   2,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   67,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   68,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   3,
+   "Alta (20–100 MW)"
+  ],
+  [
+   69,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   2,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   70,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   2,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   71,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   2,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   72,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   73,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   2,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   74,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   3,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   75,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   3,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   76,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   77,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   3,
+   "Alta (20–100 MW)"
+  ],
+  [
+   78,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   3,
+   "Alta (20–100 MW)"
+  ],
+  [
+   79,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   2,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   80,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   81,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   82,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   83,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   0,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   84,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   85,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   86,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   87,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   3,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   88,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   89,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   90,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   91,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   92,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   93,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   94,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   3,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   95,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   3,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   96,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   3,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   97,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   3,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   98,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   3,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   99,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   3,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   100,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   -1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   101,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   -1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   102,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   -1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   103,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   -1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   104,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   -1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   105,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   -1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   106,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Noite",
+   -1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   107,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   -1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   108,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   -1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   109,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   -1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   110,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   -1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   111,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   -1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   112,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   -1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   113,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   -1,
+   "Moderada (5–20 MW)"
+  ],
+  [
+   114,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   -1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   115,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   -1,
+   "Alta (20–100 MW)"
+  ],
+  [
+   116,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   -1,
+   "Baixa (2–5 MW)"
+  ],
+  [
+   117,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   -1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   118,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   -1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   119,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   -1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   120,
+   "N20",
+   "VIIRS",
+   "Nominal",
+   "Dia",
+   -1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   121,
+   "N20",
+   "VIIRS",
+   "Baixa",
+   "Dia",
+   -1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   122,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Dia",
+   -1,
+   "Muito baixa (< 2 MW)"
+  ],
+  [
+   123,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   -1,
+   "Muito alta (≥ 100 MW)"
+  ],
+  [
+   124,
+   "N20",
+   "VIIRS",
+   "Alta",
+   "Noite",
+   -1,
+   "Muito baixa (< 2 MW)"
+  ]
+ ],
+ "fontes": [
+  {
+   "arquivo": "fire_archive_J1V-C2_833522.csv",
+   "fonte": "archive",
+   "linhas": 11952522,
+   "de": "2025-10-28",
+   "ate": "2026-07-31",
+   "em": "2026-11-20 10:00:40"
+  },
+  {
+   "arquivo": "fire_nrt_J1V-C2_833522.csv",
+   "fonte": "nrt",
+   "linhas": 6589090,
+   "de": "2026-08-01",
+   "ate": "2026-10-29",
+   "em": "2026-11-20 10:04:31"
+  }
+ ]
+}

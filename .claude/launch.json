@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "dashboard-basico",
+      "name": "focos-streamlit",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "streamlit", "run", "dashboard_basico.py", "--server.port", "8502", "--server.headless", "true"],
+      "runtimeArgs": ["-m", "streamlit", "run", "streamlit_app.py", "--server.port", "8502", "--server.headless", "true"],
       "port": 8502
     }
   ]

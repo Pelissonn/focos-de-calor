@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+dados/focos_novo*/
+.streamlit/secrets.toml
+.tmp/
