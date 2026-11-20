@@ -3,6 +3,16 @@
 Dashboard cartográfico dos focos de calor da NASA FIRMS (MODIS e VIIRS): mapa mundial com detalhe por
 continente, país e estado, intensidade (FRP), série temporal, calendário mês a mês e categorias.
 
+## Objetivo
+
+- **Para quem:** gestores de defesa civil, órgãos ambientais e coordenadores de brigadas de incêndio.
+- **Pergunta central:** onde os focos de calor estão acima do normal agora — e onde concentrar equipes
+  de combate e fiscalização?
+- **Ação:** a situação compara os focos dos últimos 7 dias com a média semanal da mesma região
+  (🔴 Alerta ≥ 1,5× → acionar brigadas e fiscalização; 🟡 Atenção 1×–1,5× → prontidão e monitoramento
+  diário; 🟢 Normal → rotina e prevenção). A aba **🚨 Alertas** (MVP) lista os estados/províncias acima do
+  normal, ordenados pelo excesso de focos, com download em CSV.
+
 ## Como funciona
 
 O Streamlit Community Cloud roda na nuvem e **não acessa o MySQL do seu computador**. Por isso os dados
@@ -100,9 +110,11 @@ O Streamlit Cloud percebe o push e reinicia o app com os dados novos.
 - Mapa: células coloridas pela medida escolhida (focos, FRP total, médio ou máximo), em escala
   logarítmica; a resolução fica mais fina ao escolher continente, país ou estado. Com poucos focos
   (até 15 mil, num país ou estado), mostra cada foco individualmente. Clique numa célula para filtrar pelo país.
-- Abas: ranking de países (ou de estados), série temporal (dia/mês/ano, com períodos sem dados marcados),
-  calendário ano × mês, horário (focos por hora solar local, mapa de calor hora × mês e dia da semana),
-  categorias e tabela com download em CSV e a lista de arquivos carregados no MySQL.
+- Página em três níveis: **topo** com público, pergunta, manchete e KPIs com situação (vermelho/amarelo/verde);
+  **meio** com a evolução no tempo (com a média como referência) e o mapa; **base** com as abas de detalhe.
+- Abas: 🚨 Alertas (áreas acima do normal e ação sugerida), ranking de países (ou de estados), calendário
+  ano × mês, horário (hora solar local, hora × mês e dia da semana), categorias, qualidade dos dados
+  (verificações, atualização, arquivos carregados e regras das métricas) e tabela com download em CSV.
 - Links compartilháveis: os filtros de período e região ficam na URL, por exemplo
   `?pais=76&de=2020-08&ate=2020-09` (Brasil, ago–set de 2020).
 

@@ -49,6 +49,13 @@ st.markdown("""
   .legenda .ponta { font-variant-numeric: tabular-nums; }
   .legenda i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
   .nota { font-size: .8rem; opacity: .7; }
+  .objetivo { font-size: .92rem; padding: .55rem .8rem; border-radius: 8px; background: rgba(128,128,128,.08);
+              margin: -.4rem 0 .5rem 0; line-height: 1.5; }
+  .manchete { border-left: 6px solid #888; padding: .7rem 1rem; margin: .4rem 0 1rem 0; border-radius: 6px;
+              background: rgba(128,128,128,.06); line-height: 1.55; }
+  .manchete .grande { font-size: 2.1rem; font-weight: 700; line-height: 1.15; margin-bottom: .2rem; }
+  .manchete .grande span { font-size: 1rem; font-weight: 400; opacity: .75; }
+  .manchete .nota { margin-top: .3rem; font-size: .85rem; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -292,10 +299,16 @@ def consulta(sql):
     return q(sql)
 
 
-# ---------------------------------------------------------------- cabecalho e numeros
-st.title("Focos de calor")
-st.caption("NASA FIRMS · %s focos no banco %s, de %s a %s (datas em UTC) · dados atualizados em %s"
-           % (fmt(INFO["total"]), INFO["banco"], data_br(D0), data_br(D1), INFO["gerado_em"]))
+# ---------------------------------------------------------------- topo: para quem, para que e a situacao agora
+PUBLICO = "Gestores de defesa civil, órgãos ambientais e coordenadores de brigadas de incêndio"
+PERGUNTA = "Onde os focos de calor estão acima do normal agora — e onde concentrar equipes de combate e fiscalização?"
+st.title("Focos de calor · monitoramento para resposta a incêndios")
+st.markdown('<div class="objetivo"><b>Para quem:</b> %s<br><b>Pergunta central:</b> %s</div>' % (PUBLICO, PERGUNTA),
+            unsafe_allow_html=True)
+st.caption("🛰️ NASA FIRMS (%s) · %s focos de %s a %s (UTC) · **última atualização: %s** · atualização manual, "
+           "recomendada diária (os dados NRT saem cerca de 3 h após a passagem do satélite) · regras e qualidade na aba "
+           "\"Qualidade dos dados\"" % (", ".join(SATS.get(s, s) for s in VALORES["sat"]), fmt(INFO["total"]),
+                                         data_br(D0), data_br(D1), INFO["gerado_em"]))
 
 k = consulta(f"""SELECT COALESCE(SUM({Q}),0) n, COALESCE(SUM({FS}),0) s, COALESCE(MAX({FM}),0) m,
     COALESCE(SUM(CASE WHEN c.classe <> '' THEN {Q} END),0) nf,
@@ -304,20 +317,148 @@ k = consulta(f"""SELECT COALESCE(SUM({Q}),0) n, COALESCE(SUM({FS}),0) s, COALESC
     FROM f JOIN cb c USING (combo) WHERE {W}""").iloc[0]
 TOTAL = int(k.n)
 pico = consulta(f"SELECT dia, SUM({Q}) n FROM f WHERE {W} GROUP BY dia ORDER BY n DESC, dia LIMIT 1")
-c1, c2, c3, c4, c5, c6 = st.columns(6)
-c1.metric("Focos", fmt(TOTAL), help="Focos de calor detectados: %s a %s · %s" % (data_br(DE), data_br(ATE), nome_regiao), border=True)
-c2.metric("FRP total (MW)", compacto(k.s) if TOTAL else "—", help="Potência radiativa do fogo somada", border=True)
-c3.metric("FRP médio (MW)", fmt1(k.s / k.nf) if k.nf else "—",
-          help="Média por foco · maior foco: %s MW" % fmt1(k.m) if TOTAL else None, border=True)
-c4.metric("Pico diário", fmt(pico.n[0]) if len(pico) else "—", help=data_br(pico.dia[0]) if len(pico) else None, border=True)
-c5.metric("Alta confiança", pct(k.alta, TOTAL), help="%s focos" % fmt(k.alta), border=True)
-c6.metric("Países", fmt(k.np) if TOTAL else "—", help="Países com pelo menos um foco", border=True)
-st.caption("%s · %s a %s%s" % (nome_regiao, data_br(DE), data_br(ATE),
-                               (" · pico em " + data_br(pico.dia[0])) if len(pico) else ""))
+
+# Regra da situacao (a mesma em todo o app): focos dos ultimos 7 dias do periodo escolhido
+# comparados com a media semanal de todo o periodo carregado, para a mesma regiao e filtros.
+REF = min(ATE, D1)
+R7 = (REF - timedelta(days=6), REF)
+R7A = (REF - timedelta(days=13), REF - timedelta(days=7))
+DIAS_DADOS = max(1, (D1 - D0).days + 1 - sum((b_ - a_).days + 1 for a_, b_ in LACUNAS))
+W_SEM_PER = onde(com_periodo=False)
+entre = lambda r: "dia BETWEEN DATE '%s' AND DATE '%s'" % r
+sem7 = consulta(f"""SELECT COALESCE(SUM(CASE WHEN {entre(R7)} THEN {Q} END), 0) a,
+    COALESCE(SUM(CASE WHEN {entre(R7A)} THEN {Q} END), 0) b, COALESCE(SUM({Q}), 0) t
+    FROM f WHERE {W_SEM_PER}""").iloc[0]
+N7, N7A = int(sem7.a), int(sem7.b)
+MEDIA7 = float(sem7.t) / DIAS_DADOS * 7
+RAZAO = N7 / MEDIA7 if MEDIA7 else 0.0
+LIM_ALERTA, LIM_ATENCAO = 1.5, 1.0
+SITUACAO = {"Alerta": ("🔴", "#d03b3b"), "Atenção": ("🟡", "#c98a00"), "Normal": ("🟢", "#2e8b57")}
+ACAO = {"Alerta": "acionar brigadas e fiscalização nas áreas da aba 🚨 Alertas e avisar a defesa civil local.",
+        "Atenção": "reforçar o monitoramento diário e deixar equipes de prontidão nas áreas com mais focos.",
+        "Normal": "manter o monitoramento de rotina e investir em prevenção (aceiros, queima controlada, campanhas)."}
+ACAO_AREA = {"Alerta": "Enviar brigadas e fiscalização; avisar a defesa civil local",
+             "Atenção": "Equipes de prontidão; checar a área todos os dias",
+             "Normal": "Rotina e prevenção"}
+
+
+def situacao(r):
+    return "Alerta" if r >= LIM_ALERTA else "Atenção" if r >= LIM_ATENCAO else "Normal"
+
+
+SIT = situacao(RAZAO)
+ICONE, COR_SIT = SITUACAO[SIT]
+
+# manchete (storytelling com grandes numeros)
+dif = (RAZAO - 1) * 100
+comp = ("<b>%s%% acima</b> da média semanal" % fmt(dif)) if dif >= 0.5 else \
+       ("<b>%s%% abaixo</b> da média semanal" % fmt(-dif)) if dif <= -0.5 else "<b>igual</b> à média semanal"
+lider = consulta(f"SELECT {'reg' if PAIS is not None else 'pais % 1000'} AS c, SUM({Q}) n FROM f WHERE {W} "
+                 f"GROUP BY 1 ORDER BY n DESC LIMIT 1")
+historia = ""
+if TOTAL and len(lider):
+    c_ = int(lider.c[0])
+    nome_l = nome_reg(c_) if PAIS is not None else (curto_pais(c_) if c_ else "o mar")
+    historia = ("De %s a %s foram <b>%s focos</b>; %s concentrou <b>%s</b> deles e o pior dia foi %s (%s focos)."
+                % (data_br(DE), data_br(ATE), fmt(TOTAL), nome_l, pct(int(lider.n[0]), TOTAL),
+                   data_br(pico.dia[0]), fmt(pico.n[0])))
+st.markdown(f"""<div class="manchete" style="border-left-color:{COR_SIT}">
+  <div class="grande">{fmt(N7)} focos <span>nos últimos 7 dias · {nome_regiao}</span></div>
+  <div>{data_br(R7[0])} a {data_br(R7[1])}: {comp} ({fmt(MEDIA7)} focos). {ICONE} <b style="color:{COR_SIT}">{SIT}</b> — {ACAO[SIT]}</div>
+  <div class="nota">{historia}</div></div>""", unsafe_allow_html=True)
+
+c1, c2, c3 = st.columns(3)
+var7 = ("%+.0f" % (100 * (N7 - N7A) / N7A)) + "% vs. anterior" if N7A else None
+c1.metric("Últimos 7 dias", fmt(N7), var7, delta_color="inverse", border=True,
+          help="%s a %s · semana anterior: %s focos. Vermelho = mais focos que na semana anterior."
+               % (data_br(R7[0]), data_br(R7[1]), fmt(N7A)))
+c2.metric("Situação", "%s %s" % (ICONE, SIT), ("%s× a média" % fmt1(RAZAO)) if MEDIA7 else None, delta_color="off", delta_arrow="off",
+          border=True, help="Alerta: 7 dias ≥ %s× a média semanal · Atenção: entre 1× e %s× · Normal: abaixo da média"
+                            % (fmt1(LIM_ALERTA), fmt1(LIM_ALERTA)))
+c3.metric("Focos no período", fmt(TOTAL), border=True,
+          help="%s a %s · %s · FRP total %s MW · %s países" % (data_br(DE), data_br(ATE), nome_regiao, compacto(k.s), fmt(k.np)))
+c4, c5, c6 = st.columns(3)
+c4.metric("Pior dia", fmt(pico.n[0]) if len(pico) else "—", data_br(pico.dia[0]) if len(pico) else None,
+          delta_color="off", delta_arrow="off", border=True, help="Dia com mais focos no período escolhido")
+c5.metric("Intensidade média (FRP)", (fmt1(k.s / k.nf) + " MW") if k.nf else "—", border=True,
+          help="Potência radiativa média por foco · maior foco: %s MW" % fmt1(k.m))
+c6.metric("Alta confiança", pct(k.alta, TOTAL), border=True,
+          help="Focos que o satélite classifica com confiança alta (%s). Baixa confiança pode ser reflexo de sol ou "
+               "superfície quente." % fmt(k.alta))
 
 if not TOTAL:
     st.info("Nenhum foco para os filtros escolhidos.")
     st.stop()
+
+# ---------------------------------------------------------------- graficos
+LOC = {"number": {"decimal": ",", "thousands": ".", "grouping": [3], "currency": ["R$", ""]},
+       "time": {"dateTime": "%A, %e de %B de %Y. %X", "date": "%d/%m/%Y", "time": "%H:%M:%S", "periods": ["AM", "PM"],
+                "days": ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"],
+                "shortDays": ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"],
+                "months": ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro",
+                           "outubro", "novembro", "dezembro"], "shortMonths": MESES}}
+
+
+def pronto(ch):
+    return ch.configure(locale=LOC).configure_view(stroke=None)
+
+
+def barras(df, nome_col, titulo_eixo="", cores=None, altura_linha=26):
+    df = df.copy()
+    df["pct"] = df["n"] / TOTAL
+    df["n_txt"] = df["n"].map(fmt) + "  " + df["pct"].map(lambda x: fmt1(100 * x) + "%")
+    df["frp_txt"] = df["s"].map(compacto) + " MW"
+    enc_cor = alt.Color("cor:N", scale=None) if cores is not None else alt.value(AZUL)
+    if cores is not None:
+        df["cor"] = cores
+    ordem = list(df[nome_col])
+    base = alt.Chart(df).encode(y=alt.Y(nome_col + ":N", sort=ordem, title=None, axis=alt.Axis(labelLimit=170, labelOverlap=False, ticks=False, domain=False)))
+    b = base.mark_bar(cornerRadiusEnd=4, height=14).encode(
+        x=alt.X("n:Q", title=titulo_eixo, axis=None), color=enc_cor,
+        tooltip=[alt.Tooltip(nome_col + ":N", title=""), alt.Tooltip("n:Q", title="Focos", format=",.0f"),
+                 alt.Tooltip("pct:Q", title="% do total", format=".1%"), alt.Tooltip("frp_txt:N", title="FRP total")])
+    t = base.mark_text(align="left", dx=6, fontSize=12).encode(x="n:Q", text="n_txt:N", color=alt.value(CINZA))
+    return pronto((b + t).properties(height=max(60, altura_linha * len(df))))
+
+
+# ---------------------------------------------------------------- meio: tendencia
+st.subheader("Evolução no tempo")
+st.caption("%s · os picos mostram quando reforçar equipes; compare com a linha da média" % nome_regiao)
+dias_periodo = (ATE - DE).days
+gran = st.radio("Agrupar por", ["Dia", "Mês", "Ano"], index=0 if dias_periodo <= 400 else 1, horizontal=True, key="gran")
+trunc = {"Dia": "day", "Mês": "month", "Ano": "year"}[gran]
+se = consulta(f"SELECT DATE_TRUNC('{trunc}', dia) AS t, SUM({Q}) n, SUM({FS}) s FROM f WHERE {W} GROUP BY 1 ORDER BY 1")
+se["t"] = pd.to_datetime(se["t"])
+# completa os periodos sem focos com zero (e deixa as lacunas de dados sem linha)
+todos = pd.date_range(pd.Timestamp(max(DE, D0)).to_period({"day": "D", "month": "M", "year": "Y"}[trunc]).start_time,
+                      pd.Timestamp(min(ATE, D1)), freq={"day": "D", "month": "MS", "year": "YS"}[trunc])
+se = se.set_index("t").reindex(todos, fill_value=0).rename_axis("t").reset_index()
+for a_, b_ in LACUNAS:
+    fim_t = se["t"] + {"day": pd.Timedelta(days=0), "month": pd.offsets.MonthEnd(0), "year": pd.offsets.YearEnd(0)}[trunc]
+    se.loc[(se["t"] >= pd.Timestamp(a_)) & (fim_t <= pd.Timestamp(b_)), ["n", "s"]] = None
+se["s_txt"] = se["s"].map(lambda x: compacto(x) + " MW" if pd.notna(x) else "sem dados")
+fmt_t = {"day": "%d %b %Y", "month": "%b %Y", "year": "%Y"}[trunc]
+base = alt.Chart(se).encode(x=alt.X("t:T", title=None, axis=alt.Axis(format="%Y" if dias_periodo > 900 else "%b %Y")))
+area = base.mark_area(color=AZUL, opacity=0.12).encode(y=alt.Y("n:Q", title="Focos", axis=alt.Axis(format="~s" if se.n.max() >= 1e4 else ",.0f")))
+linha = base.mark_line(color=AZUL, strokeWidth=2).encode(y="n:Q")
+regua = alt.selection_point(nearest=True, on="pointerover", fields=["t"], empty=False)
+pontos_t = base.mark_point(size=60, filled=True, color=AZUL).encode(
+    y="n:Q", opacity=alt.condition(regua, alt.value(1), alt.value(0)),
+    tooltip=[alt.Tooltip("t:T", title="Período", format=fmt_t), alt.Tooltip("n:Q", title="Focos", format=",.0f"),
+             alt.Tooltip("s_txt:N", title="FRP total")]).add_params(regua)
+regra = base.mark_rule(color=CINZA).encode(opacity=alt.condition(regua, alt.value(0.6), alt.value(0)))
+camadas_t = [area, linha, regra, pontos_t]
+if trunc == "day" and MEDIA7:
+    camadas_t.append(alt.Chart(pd.DataFrame({"m": [MEDIA7 / 7]})).mark_rule(color=CINZA, strokeDash=[5, 4]).encode(y="m:Q"))
+lac = [dict(a=pd.Timestamp(max(a_, DE)), b=pd.Timestamp(min(b_, ATE))) for a_, b_ in LACUNAS if b_ >= DE and a_ <= ATE]
+if lac:
+    camadas_t.insert(0, alt.Chart(pd.DataFrame(lac)).mark_rect(color=CINZA, opacity=0.15).encode(x="a:T", x2="b:T"))
+st.altair_chart(pronto(alt.layer(*camadas_t).properties(height=320)), width="stretch")
+if len(se.dropna()):
+    top = se.dropna().sort_values("n", ascending=False).iloc[0]
+    st.caption("Pico: %s focos em %s%s" % (fmt(top.n), top.t.strftime({"day": "%d/%m/%Y", "month": "%m/%Y", "year": "%Y"}[trunc]),
+                                          (" · faixas cinzas = períodos sem dados carregados" if lac else "") +
+                                          (" · linha tracejada = média diária de todo o período (o normal)" if trunc == "day" else "")))
 
 
 # ---------------------------------------------------------------- mapa
@@ -441,40 +582,69 @@ st.markdown(legenda_html, unsafe_allow_html=True)
 st.caption("Fundo: © CARTO © OpenStreetMap. Cada foco é atribuído ao país e ao estado pela célula de 0,1° (≈ 11 km) em que cai; "
            "focos no mar a mais de ~30 km da costa ficam como \"sem país\".")
 
-# ---------------------------------------------------------------- graficos
-LOC = {"number": {"decimal": ",", "thousands": ".", "grouping": [3], "currency": ["R$", ""]},
-       "time": {"dateTime": "%A, %e de %B de %Y. %X", "date": "%d/%m/%Y", "time": "%H:%M:%S", "periods": ["AM", "PM"],
-                "days": ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"],
-                "shortDays": ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"],
-                "months": ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro",
-                           "outubro", "novembro", "dezembro"], "shortMonths": MESES}}
 
-
-def pronto(ch):
-    return ch.configure(locale=LOC).configure_view(stroke=None)
-
-
-def barras(df, nome_col, titulo_eixo="", cores=None, altura_linha=26):
-    df = df.copy()
-    df["pct"] = df["n"] / TOTAL
-    df["n_txt"] = df["n"].map(fmt) + "  " + df["pct"].map(lambda x: fmt1(100 * x) + "%")
-    df["frp_txt"] = df["s"].map(compacto) + " MW"
-    enc_cor = alt.Color("cor:N", scale=None) if cores is not None else alt.value(AZUL)
-    if cores is not None:
-        df["cor"] = cores
-    ordem = list(df[nome_col])
-    base = alt.Chart(df).encode(y=alt.Y(nome_col + ":N", sort=ordem, title=None, axis=alt.Axis(labelLimit=170, labelOverlap=False, ticks=False, domain=False)))
-    b = base.mark_bar(cornerRadiusEnd=4, height=14).encode(
-        x=alt.X("n:Q", title=titulo_eixo, axis=None), color=enc_cor,
-        tooltip=[alt.Tooltip(nome_col + ":N", title=""), alt.Tooltip("n:Q", title="Focos", format=",.0f"),
-                 alt.Tooltip("pct:Q", title="% do total", format=".1%"), alt.Tooltip("frp_txt:N", title="FRP total")])
-    t = base.mark_text(align="left", dx=6, fontSize=12).encode(x="n:Q", text="n_txt:N", color=alt.value(CINZA))
-    return pronto((b + t).properties(height=max(60, altura_linha * len(df))))
-
-
-aba = st.tabs(["Ranking", "Ao longo do tempo", "Calendário", "Horário", "Categorias", "Dados"])
+aba = st.tabs(["🚨 Alertas", "Ranking", "Calendário", "Horário", "Categorias", "Qualidade dos dados", "Dados"])
 
 with aba[0]:
+    st.markdown("**Onde agir primeiro** · estados e províncias com mais focos nos últimos 7 dias (%s a %s) do que a "
+                "média semanal deles · %s" % (data_br(R7[0]), data_br(R7[1]), nome_regiao))
+    al = consulta(f"""SELECT reg, MODE(pais) pais,
+        COALESCE(SUM(CASE WHEN {entre(R7)} THEN {Q} END), 0) n7,
+        COALESCE(SUM(CASE WHEN {entre(R7A)} THEN {Q} END), 0) n7a,
+        COALESCE(SUM(CASE WHEN {entre(R7)} THEN {FS} END), 0) s7,
+        COALESCE(MAX(CASE WHEN {entre(R7)} THEN {FM} END), 0) m7,
+        SUM({Q}) t FROM f WHERE {W_SEM_PER} AND reg > 0 GROUP BY reg""")
+    fa, fb = st.columns([1, 2])
+    minimo = fa.number_input("Mínimo de focos na semana", 1, 10000, 20, step=10,
+                             help="Evita alertas por poucos focos isolados")
+    ver = fb.pills("Mostrar", list(SITUACAO), default=["Alerta", "Atenção"], selection_mode="multi", key="ver_sit")
+    al["media7"] = al.t / DIAS_DADOS * 7
+    al["razao"] = al.n7 / al.media7
+    al = al[al.n7 >= minimo].copy()
+    al["sit"] = al.razao.map(situacao)
+    na, nt = int((al.sit == "Alerta").sum()), int((al.sit == "Atenção").sum())
+    m1, m2, m3 = st.columns(3)
+    m1.metric("🔴 Áreas em alerta", fmt(na), border=True, help="7 dias ≥ %s× a média semanal" % fmt1(LIM_ALERTA))
+    m2.metric("🟡 Áreas em atenção", fmt(nt), border=True, help="7 dias entre 1× e %s× a média semanal" % fmt1(LIM_ALERTA))
+    m3.metric("Focos nas áreas em alerta", fmt(al.loc[al.sit == "Alerta", "n7"].sum()), border=True,
+              help="Soma dos focos dos últimos 7 dias nas áreas em alerta")
+    al = al[al.sit.isin(ver or [])]
+    al["excesso"] = al.n7 - al.media7
+    al = al.sort_values(["excesso", "n7"], ascending=False)
+    tab_al = pd.DataFrame({
+        "Situação": al.sit.map(lambda s: SITUACAO[s][0] + " " + s),
+        "Estado / província": al.reg.map(lambda r: nome_reg(int(r))),
+        "País": al.pais.map(lambda c: curto_pais(int(c))),
+        "Focos 7 dias": al.n7.astype(int),
+        "Média semanal": al.media7.round(0).astype(int),
+        "x média": al.razao.round(1),
+        "vs. semana anterior": [((a_ - b_) / b_) if b_ else None for a_, b_ in zip(al.n7, al.n7a)],
+        "FRP 7 dias (MW)": al.s7.round(0),
+        "Maior foco (MW)": al.m7.round(1),
+        "Ação sugerida": al.sit.map(ACAO_AREA),
+    })
+    if tab_al.empty:
+        st.success("Nenhuma área nas situações escolhidas com pelo menos %s focos na semana." % fmt(minimo))
+    else:
+        st.dataframe(tab_al, width="stretch", hide_index=True, height=min(520, 38 + 35 * len(tab_al)),
+                     column_config={
+                         "Focos 7 dias": st.column_config.NumberColumn(format="localized"),
+                         "Média semanal": st.column_config.NumberColumn(format="localized"),
+                         "x média": st.column_config.ProgressColumn("× a média", min_value=0, max_value=max(3.0, float(tab_al["x média"].max())),
+                                                                    format="%.1f×"),
+                         "vs. semana anterior": st.column_config.NumberColumn(format="percent"),
+                         "FRP 7 dias (MW)": st.column_config.NumberColumn(format="localized"),
+                         "Maior foco (MW)": st.column_config.NumberColumn(format="localized"),
+                         "Ação sugerida": st.column_config.TextColumn(width="large")})
+        st.download_button("Baixar lista de áreas (%s) em CSV" % fmt(len(tab_al)),
+                           tab_al.to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig"),
+                           file_name="areas_em_alerta_%s.csv" % REF.isoformat(), mime="text/csv")
+    st.caption("Ordenado pelo excesso de focos em relação ao normal (focos dos 7 dias − média semanal). "
+               "Mude a data final do período na barra lateral para ver como estava a situação em outra semana. "
+               "Com só um ano de dados, o \"normal\" é a média do ano todo; com mais anos, o ideal é comparar com a "
+               "mesma época dos anos anteriores.")
+
+with aba[1]:
     if PAIS is not None:
         rk = consulta(f"SELECT reg, SUM({Q}) n, SUM({FS}) s FROM f WHERE {W} GROUP BY 1 ORDER BY n DESC LIMIT 30")
         rk["nome"] = rk.reg.map(nome_reg)
@@ -490,41 +660,6 @@ with aba[0]:
         ct = ct.groupby("cont", as_index=False)[["n", "s"]].sum().sort_values("n", ascending=False)
         st.markdown("**Continentes** · a Rússia é dividida entre Europa e Ásia")
         st.altair_chart(barras(ct, "cont"), width="stretch")
-
-with aba[1]:
-    dias_periodo = (ATE - DE).days
-    gran = st.radio("Agrupar por", ["Dia", "Mês", "Ano"], index=0 if dias_periodo <= 400 else 1, horizontal=True, key="gran")
-    trunc = {"Dia": "day", "Mês": "month", "Ano": "year"}[gran]
-    se = consulta(f"SELECT DATE_TRUNC('{trunc}', dia) AS t, SUM({Q}) n, SUM({FS}) s FROM f WHERE {W} GROUP BY 1 ORDER BY 1")
-    se["t"] = pd.to_datetime(se["t"])
-    # completa os periodos sem focos com zero (e deixa as lacunas de dados sem linha)
-    todos = pd.date_range(pd.Timestamp(DE).to_period({"day": "D", "month": "M", "year": "Y"}[trunc]).start_time,
-                          pd.Timestamp(ATE), freq={"day": "D", "month": "MS", "year": "YS"}[trunc])
-    se = se.set_index("t").reindex(todos, fill_value=0).rename_axis("t").reset_index()
-    for a_, b_ in LACUNAS:
-        fim_t = se["t"] + {"day": pd.Timedelta(days=0), "month": pd.offsets.MonthEnd(0), "year": pd.offsets.YearEnd(0)}[trunc]
-        se.loc[(se["t"] >= pd.Timestamp(a_)) & (fim_t <= pd.Timestamp(b_)), ["n", "s"]] = None
-    se["s_txt"] = se["s"].map(lambda x: compacto(x) + " MW" if pd.notna(x) else "sem dados")
-    fmt_t = {"day": "%d %b %Y", "month": "%b %Y", "year": "%Y"}[trunc]
-    base = alt.Chart(se).encode(x=alt.X("t:T", title=None, axis=alt.Axis(format="%Y" if dias_periodo > 900 else "%b %Y")))
-    area = base.mark_area(color=AZUL, opacity=0.12).encode(y=alt.Y("n:Q", title="Focos", axis=alt.Axis(format="~s" if se.n.max() >= 1e4 else ",.0f")))
-    linha = base.mark_line(color=AZUL, strokeWidth=2).encode(y="n:Q")
-    regua = alt.selection_point(nearest=True, on="pointerover", fields=["t"], empty=False)
-    pontos_t = base.mark_point(size=60, filled=True, color=AZUL).encode(
-        y="n:Q", opacity=alt.condition(regua, alt.value(1), alt.value(0)),
-        tooltip=[alt.Tooltip("t:T", title="Período", format=fmt_t), alt.Tooltip("n:Q", title="Focos", format=",.0f"),
-                 alt.Tooltip("s_txt:N", title="FRP total")]).add_params(regua)
-    regra = base.mark_rule(color=CINZA).encode(opacity=alt.condition(regua, alt.value(0.6), alt.value(0)))
-    camadas_t = [area, linha, regra, pontos_t]
-    lac = [dict(a=pd.Timestamp(max(a_, DE)), b=pd.Timestamp(min(b_, ATE))) for a_, b_ in LACUNAS if b_ >= DE and a_ <= ATE]
-    if lac:
-        camadas_t.insert(0, alt.Chart(pd.DataFrame(lac)).mark_rect(color=CINZA, opacity=0.15).encode(x="a:T", x2="b:T"))
-    st.altair_chart(pronto(alt.layer(*camadas_t).properties(height=320)), width="stretch")
-    if len(se.dropna()):
-        top = se.dropna().sort_values("n", ascending=False).iloc[0]
-        st.caption("Pico: %s focos em %s%s" % (fmt(top.n), top.t.strftime({"day": "%d/%m/%Y", "month": "%m/%Y", "year": "%Y"}[trunc]),
-                                              " · faixas cinzas = períodos sem dados carregados" if lac else ""))
-
 with aba[2]:
     st.markdown("**Focos por mês** · todo o período dos dados, com os demais filtros aplicados")
     cal = consulta(f"SELECT YEAR(dia) ano, MONTH(dia) mes, SUM({Q}) n, SUM({FS}) s FROM f WHERE {onde(com_periodo=False)} GROUP BY 1, 2")
@@ -641,6 +776,76 @@ with aba[4]:
         st.altair_chart(barras(d[["nome", "n", "s"]], "nome"), width="stretch")
 
 with aba[5]:
+    ql = INFO.get("qualidade") or {}
+    st.markdown("**De onde vêm os dados e quanto confiar neles**")
+    if ql:
+        orig, res = ql["linhas_origem"], ql["linhas_resumo"]
+        dup = ql.get("duplicados")
+        q1, q2, q3, q4 = st.columns(4)
+        q1.metric("Linhas no MySQL", fmt(orig), border=True, help="Tabela %s do banco %s" % (INFO["tabela"], INFO["banco"]))
+        q2.metric("Linhas no dashboard", fmt(res), "100% conferido" if res == orig else "%s a menos" % fmt(orig - res),
+                  delta_color="normal" if res == orig else "inverse", border=True,
+                  help="Todas as linhas do MySQL chegam ao dashboard; a carga confere a contagem de cada bloco")
+        q3.metric("Duplicados", fmt(dup) if dup is not None else "—", border=True,
+                  help="Focos com mesmo instante, coordenada (0,00001°), satélite e categorias")
+        sem_pais = int(q(f"SELECT COALESCE(SUM({Q}), 0) n FROM f WHERE pais = 0").n[0])
+        q4.metric("Focos sem país (mar)", pct(sem_pais, res), border=True,
+                  help="%s focos a mais de ~30 km da costa (plataformas de petróleo, navios)" % fmt(sem_pais))
+        ok = lambda v: "✅ OK" if not v else "⚠️ Atenção"
+        pq = lambda v: "< 0,01%" if 0 < v < orig * 1e-4 else pct(v, orig)
+        chk = pd.DataFrame([
+            ("Coordenada ausente ou fora da faixa", ql["sem_coordenada"] + ql["coordenada_invalida"],
+             ok(ql["sem_coordenada"] + ql["coordenada_invalida"]), "Nenhum caso"),
+            ("Data/hora ausente", ql["sem_data"], ok(ql["sem_data"]), "Nenhum caso"),
+            ("Registros duplicados", dup if dup is not None else 0,
+             ok(dup) if not dup else "ℹ️ %s do total" % pq(dup),
+             "A carga não repete arquivos; os casos restantes já vêm repetidos no arquivo da NASA e são mantidos (efeito desprezível)"
+             if dup else "A carga registra cada arquivo e não carrega o mesmo duas vezes"),
+            ("FRP ausente", ql["frp_nulo"], ok(ql["frp_nulo"]), "Ficam na classe \"Sem FRP\" e fora da média de FRP"),
+            ("FRP negativo (ruído do sensor)", ql["frp_negativo"], "ℹ️ %s do total" % pq(ql["frp_negativo"]),
+             "Mantidos como no dado da NASA, na classe \"Muito baixa\"; efeito desprezível na soma"),
+            ("Tipo de fonte não informado", ql["tipo_nulo"], "ℹ️ %s do total" % pct(ql["tipo_nulo"], orig),
+             "Os arquivos NRT não trazem o tipo; aparecem como \"Não informado (NRT)\""),
+        ], columns=["Verificação", "Linhas", "Situação", "Tratamento"])
+        st.dataframe(chk, width="stretch", hide_index=True,
+                     column_config={"Linhas": st.column_config.NumberColumn(format="localized"),
+                                    "Tratamento": st.column_config.TextColumn(width="large")})
+    else:
+        st.info("Rode de novo `python ferramentas/exportar_dados.py` para gerar as verificações de qualidade.")
+
+    st.markdown("**Atualização**")
+    st.markdown("- Última exportação: **%s** · dados de %s a %s.\n"
+                "- Frequência recomendada: **diária** — `carregar_csv.py` com o arquivo novo do FIRMS e depois "
+                "`exportar_dados.py` (só as linhas novas são processadas).\n"
+                "- **NRT** (tempo quase real) sai ~3 h após a passagem do satélite e é provisório; o **archive** "
+                "(definitivo) sai meses depois e substitui o NRT do mesmo período na carga."
+                % (INFO["gerado_em"], data_br(D0), data_br(D1)))
+    fontes = INFO.get("fontes") or []
+    if fontes:
+        with st.expander("Arquivos carregados no MySQL (%d)" % len(fontes)):
+            ft = pd.DataFrame(fontes)
+            ft["fonte"] = ft.fonte.map({"archive": "Definitivo (archive)", "nrt": "Tempo quase real (NRT)"}).fillna(ft.fonte)
+            st.dataframe(ft, width="stretch", hide_index=True,
+                         column_config={"arquivo": "Arquivo", "fonte": "Tipo", "linhas": st.column_config.NumberColumn("Linhas", format="localized"),
+                                        "de": "De", "ate": "Até", "em": "Carregado em"})
+            st.caption("Os dados NRT (tempo quase real) são provisórios; quando a NASA publica os definitivos (archive) "
+                       "do mesmo período, a carga substitui os NRT.")
+
+    st.markdown("**Regras das métricas** (as mesmas em todo o painel)")
+    st.markdown("""
+| Métrica | Definição |
+|---|---|
+| **Foco de calor** | Um pixel (≈ 375 m no VIIRS, 1 km no MODIS) em que o satélite detectou temperatura anômala numa passagem. Não é o mesmo que um incêndio: um incêndio grande gera vários focos. |
+| **Data** | Data da passagem em UTC (Brasília = UTC − 3). |
+| **Situação** | Focos dos últimos 7 dias do período ÷ média semanal de todo o período carregado, para a mesma região e filtros. 🔴 Alerta ≥ 1,5× · 🟡 Atenção 1× a 1,5× · 🟢 Normal < 1×. |
+| **FRP** | Potência radiativa do fogo (MW): indica a intensidade. Classes: muito baixa < 2, baixa 2–5, moderada 5–20, alta 20–100, muito alta ≥ 100 MW. |
+| **Confiança** | Classificação do satélite: baixa, nominal ou alta. Baixa pode ser reflexo do sol ou superfície quente. |
+| **Dia / noite** | Período da passagem do satélite. |
+| **País / estado** | Pela célula de 0,1° (≈ 11 km) em que o foco cai (Natural Earth). |
+| **Hora solar local** | Hora UTC + longitude ÷ 15. |
+""")
+
+with aba[6]:
     st.markdown("**Focos por dia e país** com os filtros atuais")
     tab = consulta(f"SELECT dia, pais, SUM({Q}) focos, ROUND(SUM({FS}), 2) frp_total_mw, ROUND(MAX({FM}), 2) frp_max_mw "
                    f"FROM f WHERE {W} GROUP BY 1, 2 ORDER BY 1, 3 DESC")
@@ -653,17 +858,6 @@ with aba[5]:
     st.download_button("Baixar CSV completo (%s linhas)" % fmt(len(tab)),
                        tab.to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig"),
                        file_name="focos_por_dia_e_pais.csv", mime="text/csv")
-
-    fontes = INFO.get("fontes") or []
-    if fontes:
-        with st.expander("Arquivos carregados no MySQL (%d)" % len(fontes)):
-            ft = pd.DataFrame(fontes)
-            ft["fonte"] = ft.fonte.map({"archive": "Definitivo (archive)", "nrt": "Tempo quase real (NRT)"}).fillna(ft.fonte)
-            st.dataframe(ft, width="stretch", hide_index=True,
-                         column_config={"arquivo": "Arquivo", "fonte": "Tipo", "linhas": st.column_config.NumberColumn("Linhas", format="localized"),
-                                        "de": "De", "ate": "Até", "em": "Carregado em"})
-            st.caption("Os dados NRT (tempo quase real) são provisórios; quando a NASA publica os definitivos (archive) "
-                       "do mesmo período, a carga substitui os NRT.")
 
 st.caption("Dados: NASA FIRMS (MODIS e VIIRS), exportados da tabela %s do banco %s. FRP = potência radiativa do fogo, em megawatts. "
            "Base cartográfica: Natural Earth (domínio público)." % (INFO["tabela"], INFO["banco"]))

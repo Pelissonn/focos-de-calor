@@ -1,6 +1,6 @@
 {
  "modo": "focos",
- "gerado_em": "2026-11-20 10:19",
+ "gerado_em": "2026-11-20 10:38",
  "banco": "area_queimada",
  "tabela": "firms_tratado",
  "total": 18541612,
@@ -1150,5 +1150,17 @@
    "ate": "2026-10-29",
    "em": "2026-11-20 10:04:31"
   }
- ]
+ ],
+ "qualidade": {
+  "linhas_origem": 18541612,
+  "sem_coordenada": 0,
+  "sem_data": 0,
+  "frp_nulo": 0,
+  "frp_negativo": 5,
+  "sem_confianca": 0,
+  "tipo_nulo": 6589090,
+  "coordenada_invalida": 0,
+  "linhas_resumo": 18541612,
+  "duplicados": 10
+ }
 }

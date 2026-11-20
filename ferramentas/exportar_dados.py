@@ -152,6 +152,19 @@ def main():
         if lidas % 1_000_000 < 50_000:
             print("  %s de %s (%d%%)" % (fmt(lidas), fmt(total), 100 * lidas // total), flush=True)
     scur.close()
+    # 2) qualidade dos dados: uma leitura da tabela original (nulos, valores fora da faixa, origem)
+    print("Conferindo a qualidade dos dados da %s..." % D.TAB, flush=True)
+    qualidade = {}
+    try:
+        cur.execute("SELECT COUNT(*), SUM(latitude IS NULL OR longitude IS NULL), SUM(acq_datetime_utc IS NULL), "
+                    "SUM(frp_mw IS NULL), SUM(frp_mw < 0), SUM(confidence_nivel IS NULL OR confidence_nivel = ''), "
+                    "SUM(tipo_cod IS NULL), SUM(latitude NOT BETWEEN -90 AND 90 OR longitude NOT BETWEEN -180 AND 180) "
+                    "FROM " + D.TAB)
+        r = [int(x or 0) for x in cur.fetchone()]
+        qualidade = dict(linhas_origem=r[0], sem_coordenada=r[1], sem_data=r[2], frp_nulo=r[3], frp_negativo=r[4],
+                         sem_confianca=r[5], tipo_nulo=r[6], coordenada_invalida=r[7], linhas_resumo=total)
+    except Exception as e:
+        print("  (nao consegui conferir a qualidade: %s)" % e)
     for ano in list(buf):
         grava(ano, forcar=True)
     for e in escritores.values():
@@ -183,6 +196,13 @@ def main():
         if mb > 950:
             print("AVISO: mesmo em grade os dados ocupam %.0f MB; o GitHub pode recusar repositorios desse tamanho." % mb)
 
+    if modo == "focos" and qualidade:
+        # duplicados: mesmo instante, coordenada (1e-5 grau) e combinacao satelite/sensor/categorias
+        db = duckdb.connect()
+        src = os.path.join(tmp, "*.parquet").replace("\\", "/")
+        n, dist = db.execute(f"SELECT COUNT(*), COUNT(DISTINCT (dia, minuto, lat, lon, combo)) FROM read_parquet('{src}')").fetchone()
+        qualidade["duplicados"] = int(n - dist)
+        db.close()
     maior = max(os.path.getsize(os.path.join(tmp, f)) for f in os.listdir(tmp)) / 1e6
     shutil.rmtree(DESTINO, ignore_errors=True)
     os.replace(tmp, DESTINO)
@@ -190,7 +210,7 @@ def main():
     info = dict(
         modo=modo, gerado_em=datetime.now().strftime("%Y-%m-%d %H:%M"), banco=a.database, tabela=D.TAB,
         total=total, intervalo=dict(min=str(mn), max=str(mx)), lacunas=lacunas, arquivos=arquivos,
-        combos=combos, fontes=fontes,
+        combos=combos, fontes=fontes, qualidade=qualidade,
     )
     with open(INFO, "w", encoding="utf-8") as f:
         json.dump(info, f, ensure_ascii=False, indent=1)
